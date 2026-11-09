@@ -962,6 +962,22 @@ def default_headers() -> CaseInsensitiveDict[str]:
     )
 
 
+def _split_header_params(params: str) -> Generator[str]:
+    """Split ``;``-separated header parameters, keeping semicolons that
+    appear inside double-quoted values intact."""
+    part: list[str] = []
+    quoted = False
+    for char in params:
+        if char == '"':
+            quoted = not quoted
+        if char == ";" and not quoted:
+            yield "".join(part)
+            part = []
+        else:
+            part.append(char)
+    yield "".join(part)
+
+
 def parse_header_links(value: str) -> list[dict[str, str]]:
     """Return a list of parsed link headers proxies.
 
@@ -986,9 +1002,9 @@ def parse_header_links(value: str) -> list[dict[str, str]]:
 
         link: dict[str, str] = {"url": url.strip("<> '\"")}
 
-        for param in params.split(";"):
+        for param in _split_header_params(params):
             try:
-                key, value = param.split("=")
+                key, value = param.split("=", 1)
             except ValueError:
                 break
 

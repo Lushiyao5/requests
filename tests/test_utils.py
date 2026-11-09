@@ -691,6 +691,16 @@ def test_iter_slices(value, length):
             ],
         ),
         ("", []),
+        # A "=" inside a quoted value must not discard the remaining params.
+        (
+            '<https://a/b>; rel="next"; title="x=y"; type="t"',
+            [{"url": "https://a/b", "rel": "next", "title": "x=y", "type": "t"}],
+        ),
+        # A ";" inside a quoted value must not truncate it or lose later params.
+        (
+            '<https://a/b>; title="a;b"; rel=next',
+            [{"url": "https://a/b", "title": "a;b", "rel": "next"}],
+        ),
     ),
 )
 def test_parse_header_links(value, expected):
